@@ -112,44 +112,26 @@ pair<YulString, BuiltinFunctionForEVM> createFunction(
 	return {name, f};
 }
 
-namespace {
-// TODO: merge this completely into createBuiltins?
-std::map<string, evmasm::Instruction> const& evm_instructions()
-{
-	// Allowed instructions, lowercase names.
-	static map<string, evmasm::Instruction> s_instructions;
-	if (s_instructions.empty())
-	{
-		for (auto const& instruction: evmasm::c_instructions)
-		{
-			if (
-				instruction.second == evmasm::Instruction::JUMPDEST ||
-				evmasm::isPushInstruction(instruction.second)
-			)
-				continue;
-			string name = instruction.first;
-			transform(name.begin(), name.end(), name.begin(), [](unsigned char _c) { return tolower(_c); });
-			s_instructions[name] = instruction.second;
-		}
-	}
-	return s_instructions;
-}
-}
-
 map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVersion, bool _objectAccess)
 {
 	map<YulString, BuiltinFunctionForEVM> builtins;
-	for (auto const& instr: evm_instructions())
+	for (auto const& instr: evmasm::c_instructions)
+	{
+		string name = instr.first;
+		transform(name.begin(), name.end(), name.begin(), [](unsigned char _c) { return tolower(_c); });
+		auto const opcode = instr.second;
+
 		if (
-			!evmasm::isDupInstruction(instr.second) &&
-			!evmasm::isSwapInstruction(instr.second) &&
-			!evmasm::isPushInstruction(instr.second) &&
-			instr.second != evmasm::Instruction::JUMP &&
-			instr.second != evmasm::Instruction::JUMPI &&
-			instr.second != evmasm::Instruction::JUMPDEST &&
-			_evmVersion.hasOpcode(instr.second)
+			!evmasm::isDupInstruction(opcode) &&
+			!evmasm::isSwapInstruction(opcode) &&
+			!evmasm::isPushInstruction(opcode) &&
+			opcode != evmasm::Instruction::JUMP &&
+			opcode != evmasm::Instruction::JUMPI &&
+			opcode != evmasm::Instruction::JUMPDEST &&
+			_evmVersion.hasOpcode(opcode)
 		)
-			builtins.emplace(createEVMFunction(instr.first, instr.second));
+			builtins.emplace(createEVMFunction(name, opcode));
+	}
 
 	if (_objectAccess)
 	{
