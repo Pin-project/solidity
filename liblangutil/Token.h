@@ -266,6 +266,9 @@ namespace solidity::langutil
 	K(Unchecked, "unchecked", 0)                                       \
 	K(Var, "var", 0)                                                   \
 	\
+	/* Yul-specific tokens, but not keywords. */                       \
+	T(Leave, "leave", 0)                                               \
+	\
 	/* Illegal token - not able to scan. */                            \
 	T(Illegal, "ILLEGAL", 0)                                           \
 	\
@@ -317,7 +320,7 @@ namespace TokenTraits
 	constexpr bool isYulToken(Token tok)
 	{
 		return tok == Token::Function || tok == Token::Let || tok == Token::If || tok == Token::Switch || tok == Token::Case
-		|| tok == Token::Default || tok == Token::For || tok == Token::Break || tok == Token::Continue /* || tok == Token::Leave */
+		|| tok == Token::Default || tok == Token::For || tok == Token::Break || tok == Token::Continue || tok == Token::Leave
 		|| tok == Token::TrueLiteral || tok == Token::FalseLiteral;
 	}
 
